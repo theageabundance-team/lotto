@@ -399,6 +399,8 @@
 
   function onNext() {
     clearEmojiConfetti();
+    emojiNodes.forEach(el => el.remove());
+    emojiNodes = [];
     document.getElementById('result-modal').classList.remove('open');
     if (round === 1) {
       round = 2;
@@ -419,13 +421,15 @@
   // ── EMOJI CONFETTI ──
   const EMOJIS = ['💰','💎','🌕','🎉','🏆','⭐','💫','🤑','🎊','🎯'];
   let emojiNodes = [];
+  let emojiRunning = false;
 
   function launchEmojiConfetti() {
     clearEmojiConfetti();
+    emojiRunning = true;
     let count = 0;
     const max = 40;
     function spawn() {
-      if (count >= max) return;
+      if (!emojiRunning || count >= max) return;
       const el = document.createElement('div');
       el.className = 'emoji-particle';
       el.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
@@ -447,6 +451,7 @@
   }
 
   function clearEmojiConfetti() {
+    emojiRunning = false;
     emojiNodes.forEach(el => { try { el.remove(); } catch(e){} });
     emojiNodes = [];
   }
