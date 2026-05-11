@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PowerLotto AI – Quiz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1b33;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 2.5rem 2rem 2rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* LOGO */
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 8px 14px;
+      margin-bottom: 1.6rem;
+    }
+    .logo-text { font-size: 18px; font-weight: 900; line-height: 1.1; text-align: center; }
+    .logo-power { color: #fff; display: block; }
+    .logo-lott  { color: #fff; }
+    .logo-ai    { color: #e63030; }
+
+    /* TITLE */
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 0.5rem;
+    }
+
+    /* INTRO TEXT (only on first question) */
+    .intro-text {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 1.4rem;
+    }
+
+    /* QUESTION */
+    .question {
+      font-size: 16px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.5;
+      margin-bottom: 1.2rem;
+      text-align: center;
+    }
+
+    /* OPTIONS */
+    .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.4rem; }
+
+    .option-btn {
+      width: 100%;
+      padding: 14px 16px;
+      background: #f0f0f0;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #222;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .option-btn:hover { background: #e8e8e8; }
+    .option-btn.selected {
+      background: #fff0f0;
+      border-color: #e63030;
+      color: #111;
+    }
+
+    /* CONTINUE BUTTON */
+    .btn-continue {
+      display: block;
+      width: 100%;
+      padding: 18px 0;
+      background: #e8a09a;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 10px;
+      cursor: not-allowed;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+    .btn-continue.active {
+      background: #e63030;
+      cursor: pointer;
+    }
+    .btn-continue.active:hover { background: #c82828; }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <div class="logo">
+    <div class="logo-text">
+      <span class="logo-power">POWER</span>
+      <span class="logo-lott">LOTT</span><span class="logo-ai">AI</span>
+    </div>
+  </div>
+
+  <p class="page-title">PowerLotto AI</p>
+  <p class="intro-text" id="intro-text">
+    We're unlocking our PowerLotto AI so you can test it soon. But first — answer these 5 quick questions so we can calibrate your prediction profile.
+  </p>
+
+  <p class="question" id="question-text"></p>
+
+  <div class="options" id="options-container"></div>
+
+  <button class="btn-continue" id="btn-continue">CONTINUE</button>
+
+</div>
+
+<script>
+  const questions = [
+    {
+      q: "What's the biggest prize you've ever won playing Powerball or any lottery?",
+      options: [
+        "I've never won anything",
+        "Less than $20",
+        "Between $20 and $200",
+        "Between $200 and $2,000",
+        "More than $2,000"
+      ]
+    },
+    {
+      q: "How do you usually pick your numbers?",
+      options: [
+        "Special dates (birthdays, anniversaries, etc.)",
+        "Personal lucky numbers",
+        "Quick Pick / Random",
+        "Based on statistics or past draws",
+        "I use a method or system of my own"
+      ]
+    },
+    {
+      q: "How much do you spend monthly on lottery tickets?",
+      options: [
+        "I don't spend anything",
+        "Up to $10",
+        "Between $10 and $20",
+        "Between $20 and $100",
+        "More than $100"
+      ]
+    },
+    {
+      q: "If you won $50,000 tomorrow, what would you do first?",
+      subtitle: "Your dream win may be closer than you think...",
+      options: [
+        "💸 Pay off debt",
+        "🚗 Buy a new car",
+        "💰 Invest it",
+        "🏠 Put it toward a home",
+        "👨‍👩‍👧 Help my family"
+      ]
+    },
+    {
+      q: "Have you heard of people who won the lottery more than 10 times?",
+      options: [
+        "Yes — and I believe it's possible",
+        "Yes — but I think it's just luck",
+        "Yes — but I think something else is behind it",
+        "No, never heard of it",
+        "I don't believe it's real"
+      ]
+    },
+    {
+      q: "What is your biggest challenge when trying to win?",
+      options: [
+        "I don't know how to pick the right numbers",
+        "I spend too much and win too little",
+        "I don't have an effective strategy",
+        "I think it's all luck",
+        "Never thought about it"
+      ]
+    },
+    {
+      q: "What would be an ideal monthly winning amount for you?",
+      options: [
+        "💰 $200–$1,000 per month would be great",
+        "💰 $1,000–$3,000 per month would change everything",
+        "💰 $3,000–$10,000 per month is my goal",
+        "💰 More than $10,000 per month",
+        "💰 Any amount would already improve my life"
+      ]
+    }
+  ];
+
+  let current = 0;
+  let selected = null;
+
+  const questionEl  = document.getElementById('question-text');
+  const optionsEl   = document.getElementById('options-container');
+  const continueBtn = document.getElementById('btn-continue');
+  const introEl     = document.getElementById('intro-text');
+
+  function renderQuestion() {
+    selected = null;
+    continueBtn.classList.remove('active');
+
+    const q = questions[current];
+
+    // Show intro only on first question
+    introEl.style.display = current === 0 ? 'block' : 'none';
+
+    // Subtitle line (question 4)
+    questionEl.textContent = q.q;
+    if (q.subtitle) {
+      const sub = document.createElement('p');
+      sub.style.cssText = 'font-size:13px;color:#777;font-weight:400;margin-bottom:6px;';
+      sub.textContent = q.subtitle;
+      questionEl.before(sub);
+    }
+
+    optionsEl.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => selectOption(i, btn));
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function selectOption(i, btn) {
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selected = i;
+    continueBtn.classList.add('active');
+  }
+
+  continueBtn.addEventListener('click', () => {
+    if (selected === null) return;
+
+    // Remove any subtitle injected
+    const oldSub = questionEl.previousElementSibling;
+    if (oldSub && oldSub.tagName === 'P' && oldSub !== introEl) oldSub.remove();
+
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      location.href = 'loading.html';
+    }
+  });
+
+  renderQuestion();
+</script>
+</body>
+</html>
