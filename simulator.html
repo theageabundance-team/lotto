@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PowerLotto AI – Simulator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1b33;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 2rem 2rem 2rem;
+      max-width: 820px;
+      width: 100%;
+    }
+
+    /* ── LOGO ── */
+    .logo-wrap { text-align: center; margin-bottom: 0.6rem; }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 8px 14px;
+    }
+    .logo-text { font-size: 18px; font-weight: 900; line-height: 1.1; text-align: center; }
+    .logo-power { color: #fff; display: block; }
+    .logo-lott  { color: #fff; }
+    .logo-ai    { color: #e63030; }
+
+    /* ── SUBTITLE ── */
+    .sim-title {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      margin-bottom: 1.2rem;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #e63030;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    /* ── ROUND INFO ── */
+    .round-info { margin-bottom: 1rem; }
+    .round-info h2 { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 2px; }
+    .ai-status { font-size: 13px; color: #333; font-weight: 500; }
+    .ai-off { color: #e63030; font-weight: 700; }
+    .ai-on  { color: #16a34a; font-weight: 700; }
+
+    /* ── INSTRUCTION ── */
+    .instruction {
+      font-size: 15px;
+      color: #111;
+      margin-bottom: 1rem;
+    }
+    .instruction strong { font-weight: 700; }
+
+    /* ── WHITE NUMBERS SELECTED DISPLAY ── */
+    .selected-display {
+      font-size: 15px;
+      color: #111;
+      margin-bottom: 1rem;
+    }
+    .selected-display span { font-weight: 700; }
+
+    /* ── NUMBER GRID ── */
+    .number-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 1.4rem;
+    }
+
+    .num-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 1.5px solid #ddd;
+      background: #f5f5f5;
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .num-btn:hover:not(.selected):not(.disabled) {
+      border-color: #bbb;
+      background: #eee;
+    }
+    .num-btn.selected {
+      background: #e63030;
+      border-color: #e63030;
+      color: #fff;
+    }
+    .num-btn.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Powerball grid — smaller circles for 1-26 */
+    .pb-grid .num-btn {
+      width: 56px;
+      height: 56px;
+    }
+
+    /* ── CONFIRM BUTTON ── */
+    .btn-confirm {
+      display: block;
+      width: 100%;
+      padding: 18px 0;
+      background: #e8a09a;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 10px;
+      cursor: not-allowed;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+    .btn-confirm.active {
+      background: #e63030;
+      cursor: pointer;
+    }
+    .btn-confirm.active:hover { background: #c82828; }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 15, 30, 0.88);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #1a2035;
+      border-radius: 16px;
+      padding: 2.5rem 2rem 2rem;
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-x {
+      font-size: 52px;
+      color: #e63030;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.6rem;
+    }
+    .modal-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #e63030;
+      margin-bottom: 0.3rem;
+    }
+    .modal-sub {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 1.4rem;
+    }
+
+    .numbers-row-wrap {
+      background: #111827;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+    }
+    .numbers-row-label {
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 0.6rem;
+    }
+    .numbers-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .res-ball {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .res-ball.white-match  { background: #16a34a; color: #fff; }
+    .res-ball.white-miss   { background: #e63030; color: #fff; }
+    .res-ball.win-ball     { background: #ffffff; color: #111; }
+    .res-ball.pb-ball      { background: #e63030; color: #fff; }
+    .res-divider {
+      width: 2px;
+      height: 30px;
+      background: #444;
+      border-radius: 2px;
+      margin: 0 4px;
+    }
+
+    .btn-next {
+      display: block;
+      width: 100%;
+      margin-top: 1.4rem;
+      padding: 16px 0;
+      background: #e63030;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .btn-next:hover { background: #c82828; }
+
+    /* ── FINAL RESULTS PAGE ── */
+    #final-screen { display: none; }
+    #final-screen .final-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 0.4rem;
+    }
+    #final-screen .final-sub {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 1.4rem;
+    }
+    .result-block {
+      border: 1.5px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .result-block h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    .result-block .score {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 0.6rem;
+    }
+    .result-balls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-play-again {
+      display: block;
+      width: 100%;
+      margin-top: 1.2rem;
+      padding: 18px 0;
+      background: #e63030;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .btn-play-again:hover { background: #c82828; }
+
+    @media (max-width: 600px) {
+      .num-btn { width: 42px; height: 42px; font-size: 13px; }
+      .pb-grid .num-btn { width: 46px; height: 46px; }
+      .res-ball { width: 40px; height: 40px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- MAIN CARD -->
+<div class="card" id="main-card">
+
+  <!-- Logo -->
+  <div class="logo-wrap">
+    <div class="logo">
+      <div class="logo-text">
+        <span class="logo-power">POWER</span>
+        <span class="logo-lott">LOTT</span><span class="logo-ai">AI</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="sim-title">Powerball Simulator</p>
+
+  <!-- Progress bar -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-fill" style="width: 50%"></div>
+  </div>
+
+  <!-- Round info -->
+  <div class="round-info">
+    <h2 id="round-label">Round 1/2</h2>
+    <p class="ai-status">POWERLOTTO AI = <span id="ai-label" class="ai-off">OFF</span></p>
+  </div>
+
+  <!-- ── WHITE NUMBERS STEP ── -->
+  <div id="step-white">
+    <p class="instruction">Select <strong>5 white numbers</strong> (1-69):</p>
+    <div class="number-grid" id="white-grid"></div>
+    <button class="btn-confirm" id="btn-confirm-white">CONFIRM WHITE NUMBERS (0/5)</button>
+  </div>
+
+  <!-- ── POWERBALL STEP ── -->
+  <div id="step-powerball" style="display:none;">
+    <p class="selected-display">Your white numbers: <span id="white-chosen-display"></span></p>
+    <p class="instruction">Now select <strong>1 Powerball number</strong> (1-26):</p>
+    <div class="number-grid pb-grid" id="pb-grid"></div>
+    <button class="btn-confirm" id="btn-check-result">CHECK RESULT</button>
+  </div>
+
+  <!-- ── FINAL SCREEN ── -->
+  <div id="final-screen">
+    <p class="final-title">Simulation Complete!</p>
+    <p class="final-sub">Here are your results for both rounds:</p>
+    <div id="final-round1" class="result-block"></div>
+    <div id="final-round2" class="result-block"></div>
+    <button class="btn-play-again" onclick="location.href='index.html'">PLAY AGAIN</button>
+  </div>
+
+</div><!-- /card -->
+
+<!-- RESULT MODAL -->
+<div class="modal-overlay" id="result-modal">
+  <div class="modal">
+    <div class="modal-x">✕</div>
+    <p class="modal-title" id="modal-title">You matched 0 white numbers.</p>
+    <p class="modal-sub" id="modal-sub">Better luck next time!</p>
+
+    <div class="numbers-row-wrap">
+      <p class="numbers-row-label">Your numbers:</p>
+      <div class="numbers-row" id="modal-your-numbers"></div>
+    </div>
+
+    <div class="numbers-row-wrap">
+      <p class="numbers-row-label">Winning numbers:</p>
+      <div class="numbers-row" id="modal-winning-numbers"></div>
+    </div>
+
+    <button class="btn-next" id="modal-next-btn">NEXT ROUND →</button>
+  </div>
+</div>
+
+<script>
+  // ── STATE ──
+  const state = {
+    round: 1,           // 1 or 2
+    whiteSelected: [],  // up to 5
+    pbSelected: null,
+    rounds: [],         // store results [{white, pb, winWhite, winPb, matches}]
+    // winning numbers (randomly drawn once per round)
+    winningWhite: [],
+    winningPb: null,
+  };
+
+  // ── HELPERS ──
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function pickWinning() {
+    const pool = Array.from({length: 69}, (_, i) => i + 1);
+    state.winningWhite = shuffle(pool).slice(0, 5).sort((a, b) => a - b);
+    state.winningPb = Math.floor(Math.random() * 26) + 1;
+  }
+
+  // ── BUILD GRIDS ──
+  function buildWhiteGrid() {
+    const grid = document.getElementById('white-grid');
+    grid.innerHTML = '';
+    for (let n = 1; n <= 69; n++) {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn';
+      btn.textContent = n;
+      btn.dataset.n = n;
+      btn.addEventListener('click', () => toggleWhite(n, btn));
+      grid.appendChild(btn);
+    }
+  }
+
+  function buildPbGrid() {
+    const grid = document.getElementById('pb-grid');
+    grid.innerHTML = '';
+    for (let n = 1; n <= 26; n++) {
+      const btn = document.createElement('button');
+      btn.className = 'num-btn';
+      btn.textContent = n;
+      btn.dataset.n = n;
+      btn.addEventListener('click', () => selectPb(n, btn));
+      grid.appendChild(btn);
+    }
+  }
+
+  // ── WHITE NUMBER TOGGLE ──
+  function toggleWhite(n, btn) {
+    if (btn.classList.contains('disabled')) return;
+    if (btn.classList.contains('selected')) {
+      btn.classList.remove('selected');
+      state.whiteSelected = state.whiteSelected.filter(x => x !== n);
+    } else {
+      if (state.whiteSelected.length >= 5) return;
+      btn.classList.add('selected');
+      state.whiteSelected.push(n);
+    }
+    updateWhiteBtn();
+    // disable unselected if 5 chosen
+    document.querySelectorAll('#white-grid .num-btn').forEach(b => {
+      if (!b.classList.contains('selected')) {
+        b.classList.toggle('disabled', state.whiteSelected.length >= 5);
+      }
+    });
+  }
+
+  function updateWhiteBtn() {
+    const cnt = state.whiteSelected.length;
+    const btn = document.getElementById('btn-confirm-white');
+    btn.textContent = `CONFIRM WHITE NUMBERS (${cnt}/5)`;
+    btn.classList.toggle('active', cnt === 5);
+  }
+
+  // ── PB SELECT ──
+  function selectPb(n, btn) {
+    document.querySelectorAll('#pb-grid .num-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.pbSelected = n;
+    document.getElementById('btn-check-result').classList.add('active');
+  }
+
+  // ── CONFIRM WHITE → show PB step ──
+  document.getElementById('btn-confirm-white').addEventListener('click', function() {
+    if (state.whiteSelected.length < 5) return;
+    const sorted = [...state.whiteSelected].sort((a, b) => a - b);
+    document.getElementById('white-chosen-display').textContent = sorted.join(', ');
+    document.getElementById('step-white').style.display = 'none';
+    document.getElementById('step-powerball').style.display = 'block';
+    state.pbSelected = null;
+    buildPbGrid();
+    document.getElementById('btn-check-result').classList.remove('active');
+  });
+
+  // ── CHECK RESULT ──
+  document.getElementById('btn-check-result').addEventListener('click', function() {
+    if (!state.pbSelected) return;
+
+    const userWhite = [...state.whiteSelected].sort((a, b) => a - b);
+    const userPb    = state.pbSelected;
+    const winWhite  = state.winningWhite;
+    const winPb     = state.winningPb;
+
+    const whiteMatches = userWhite.filter(n => winWhite.includes(n)).length;
+    const pbMatch      = userPb === winPb;
+
+    state.rounds.push({ userWhite, userPb, winWhite, winPb, whiteMatches, pbMatch });
+
+    showResultModal(userWhite, userPb, winWhite, winPb, whiteMatches, pbMatch);
+  });
+
+  function showResultModal(userWhite, userPb, winWhite, winPb, whiteMatches, pbMatch) {
+    // title
+    let title = '';
+    if (whiteMatches === 0 && !pbMatch) title = 'You matched 0 numbers.';
+    else if (whiteMatches === 1) title = 'You matched 1 white number.';
+    else title = `You matched ${whiteMatches} white numbers${pbMatch ? ' + the Powerball!' : '.'}`;
+
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-sub').textContent =
+      whiteMatches >= 4 ? 'Incredible! 🎉' :
+      whiteMatches >= 2 ? 'Not bad!' : 'Better luck next time!';
+
+    // your numbers row
+    const yourRow = document.getElementById('modal-your-numbers');
+    yourRow.innerHTML = '';
+    userWhite.forEach(n => {
+      const ball = document.createElement('div');
+      ball.className = 'res-ball ' + (winWhite.includes(n) ? 'white-match' : 'white-miss');
+      ball.textContent = n;
+      yourRow.appendChild(ball);
+    });
+    const div1 = document.createElement('div'); div1.className = 'res-divider'; yourRow.appendChild(div1);
+    const pbBall = document.createElement('div');
+    pbBall.className = 'res-ball pb-ball';
+    pbBall.textContent = userPb;
+    yourRow.appendChild(pbBall);
+
+    // winning numbers row
+    const winRow = document.getElementById('modal-winning-numbers');
+    winRow.innerHTML = '';
+    winWhite.forEach(n => {
+      const ball = document.createElement('div');
+      ball.className = 'res-ball win-ball';
+      ball.textContent = n;
+      winRow.appendChild(ball);
+    });
+    const div2 = document.createElement('div'); div2.className = 'res-divider'; winRow.appendChild(div2);
+    const winPbBall = document.createElement('div');
+    winPbBall.className = 'res-ball pb-ball';
+    winPbBall.textContent = winPb;
+    winRow.appendChild(winPbBall);
+
+    // next button label
+    const nextBtn = document.getElementById('modal-next-btn');
+    if (state.round === 1) {
+      nextBtn.textContent = 'NEXT ROUND →';
+    } else {
+      nextBtn.textContent = 'SEE FINAL RESULTS →';
+    }
+
+    document.getElementById('result-modal').classList.add('open');
+  }
+
+  // ── MODAL NEXT ──
+  document.getElementById('modal-next-btn').addEventListener('click', function() {
+    document.getElementById('result-modal').classList.remove('open');
+
+    if (state.round === 1) {
+      // go to round 2
+      state.round = 2;
+      state.whiteSelected = [];
+      state.pbSelected = null;
+      pickWinning();
+
+      document.getElementById('round-label').textContent = 'Round 2/2';
+      document.getElementById('progress-fill').style.width = '100%';
+
+      // Round 2: AI = ON
+      const aiLabel = document.getElementById('ai-label');
+      aiLabel.textContent = 'ON';
+      aiLabel.className = 'ai-on';
+
+      document.getElementById('step-powerball').style.display = 'none';
+      document.getElementById('step-white').style.display = 'block';
+      buildWhiteGrid();
+      updateWhiteBtn();
+
+    } else {
+      // go to offer page
+      location.href = 'offer.html';
+    }
+  });
+
+  // ── FINAL SCREEN ──
+  function showFinalScreen() {
+    document.getElementById('step-white').style.display = 'none';
+    document.getElementById('step-powerball').style.display = 'none';
+    document.getElementById('round-label').style.display = 'none';
+    document.querySelector('.ai-status').style.display = 'none';
+    document.querySelector('.progress-bar-wrap').style.display = 'none';
+
+    const fs = document.getElementById('final-screen');
+    fs.style.display = 'block';
+
+    state.rounds.forEach((r, i) => {
+      const el = document.getElementById(`final-round${i + 1}`);
+      const aiText = i === 0 ? 'AI OFF' : 'AI ON';
+      const matchText = `${r.whiteMatches} white number${r.whiteMatches !== 1 ? 's' : ''}${r.pbMatch ? ' + Powerball' : ''}`;
+      el.innerHTML = `
+        <h3>Round ${i + 1}/2 — POWERLOTTO AI: ${aiText}</h3>
+        <p class="score">Matched: <strong>${matchText}</strong></p>
+        <div class="result-balls">
+          ${r.userWhite.map(n =>
+            `<div class="res-ball ${r.winWhite.includes(n) ? 'white-match' : 'white-miss'}">${n}</div>`
+          ).join('')}
+          <div class="res-divider"></div>
+          <div class="res-ball pb-ball">${r.userPb}</div>
+        </div>
+      `;
+    });
+  }
+
+  // ── INIT ──
+  function init() {
+    state.round = 1;
+    state.whiteSelected = [];
+    state.pbSelected = null;
+    state.rounds = [];
+
+    document.getElementById('round-label').textContent = 'Round 1/2';
+    document.getElementById('progress-fill').style.width = '50%';
+    document.getElementById('ai-label').textContent = 'OFF';
+    document.getElementById('ai-label').className = 'ai-off';
+
+    document.getElementById('step-white').style.display = 'block';
+    document.getElementById('step-powerball').style.display = 'none';
+    document.getElementById('final-screen').style.display = 'none';
+
+    buildWhiteGrid();
+    buildPbGrid();
+    updateWhiteBtn();
+    pickWinning();
+  }
+
+  init();
+</script>
+</body>
+</html>
