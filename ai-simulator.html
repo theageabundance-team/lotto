@@ -394,7 +394,7 @@
 
     document.getElementById('result-modal').classList.add('open');
     document.getElementById('modal-next-btn').addEventListener('click', onNext);
-    if (isWin) launchEmojiConfetti();
+    if (isWin) { launchEmojiConfetti(); playWinSound(); }
   }
 
   function onNext() {
@@ -416,6 +416,35 @@
       sessionStorage.setItem('pl_balance', balance);
       location.href = 'results.html';
     }
+  }
+
+  // ── WIN SOUND ──
+  function playWinSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      function playNote(freq, startTime, duration, vol = 0.4) {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(vol, ctx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration);
+      }
+
+      // Coin/win melody: ascending happy notes
+      playNote(523, 0.00, 0.15); // C5
+      playNote(659, 0.12, 0.15); // E5
+      playNote(784, 0.24, 0.15); // G5
+      playNote(1047,0.36, 0.25); // C6
+      playNote(784, 0.48, 0.12); // G5
+      playNote(1047,0.56, 0.40); // C6 long
+
+    } catch(e) { /* silently fail if audio blocked */ }
   }
 
   // ── EMOJI CONFETTI ──
