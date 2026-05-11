@@ -3,492 +3,161 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PowerLotto AI – AI Simulator</title>
+  <title>PowerLotto AI – Analyzing</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0f1b33; min-height: 100vh;
-      display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem;
-    }
-    .card {
-      background: #fff; border-radius: 16px; padding: 2rem;
-      max-width: 820px; width: 100%; position: relative;
+      background: #0f1b33;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
     }
 
-    /* TOOLTIP */
-    .tooltip-banner {
-      position: absolute; top: -54px; left: 50%; transform: translateX(-50%);
-      background: #1a1a2e; color: #fff; font-size: 14px; font-weight: 600;
-      padding: 12px 22px; border-radius: 24px; white-space: nowrap;
-    }
-    .tooltip-banner::after {
-      content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-      border-width: 8px 8px 0; border-style: solid; border-color: #1a1a2e transparent transparent;
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 2.5rem 2rem 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
     }
 
     /* LOGO */
-    .logo-wrap { text-align: center; margin-bottom: 0.6rem; }
-    .logo { display: inline-flex; align-items: center; justify-content: center; background: #1a1a2e; border-radius: 8px; padding: 8px 14px; }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 8px 14px;
+      margin-bottom: 1.8rem;
+    }
     .logo-text { font-size: 18px; font-weight: 900; line-height: 1.1; text-align: center; }
     .logo-power { color: #fff; display: block; }
     .logo-lott  { color: #fff; }
     .logo-ai    { color: #e63030; }
-    .sim-title  { text-align: center; font-size: 14px; color: #555; margin-bottom: 0.8rem; }
 
-    .progress-bar-wrap { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; margin-bottom: 1.2rem; overflow: hidden; }
-    .progress-bar-fill { height: 100%; background: #e63030; border-radius: 3px; transition: width 0.4s; }
-
-    .round-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1rem; }
-    .round-info h2 { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 2px; }
-    .ai-status { font-size: 13px; color: #333; font-weight: 500; }
-    .ai-on { color: #16a34a; font-weight: 700; }
-    .balance { font-size: 15px; font-weight: 700; color: #16a34a; white-space: nowrap; }
-
-    .instruction { font-size: 15px; color: #111; margin-bottom: 0.5rem; }
-    .instruction strong { font-weight: 700; }
-    .ai-thinking { font-size: 13px; color: #777; font-style: italic; margin-bottom: 1rem; min-height: 18px; }
-
-    /* GRID */
-    .number-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.4rem; }
-    .num-btn {
-      width: 52px; height: 52px; border-radius: 50%;
-      border: 1.5px solid #ddd; background: #f0f0f0;
-      font-size: 15px; font-weight: 600; color: #bbb;
-      cursor: not-allowed;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
-    }
-    .num-btn.ai-pick {
-      background: #f5c542; border-color: #e6b800; color: #111;
-      font-weight: 700; cursor: pointer;
-      animation: pop-in 0.35s cubic-bezier(0.34,1.56,0.64,1);
-      box-shadow: 0 0 0 5px rgba(245,197,66,0.25);
-    }
-    @keyframes pop-in {
-      0%   { transform: scale(0.4); opacity: 0.2; }
-      100% { transform: scale(1);   opacity: 1; }
-    }
-    .num-btn.selected {
-      background: #e63030; border-color: #e63030; color: #fff;
-      cursor: not-allowed; box-shadow: none;
-    }
-    .pb-grid .num-btn { width: 56px; height: 56px; }
-
-    .selected-display { font-size: 15px; color: #111; margin-bottom: 0.5rem; }
-    .selected-display span { font-weight: 700; }
-
-    .btn-confirm {
-      display: block; width: 100%; padding: 18px 0;
-      background: #e8a09a; color: #fff; font-size: 15px; font-weight: 800;
-      letter-spacing: 1px; border: none; border-radius: 10px; cursor: not-allowed;
-      text-transform: uppercase; transition: background 0.2s;
-    }
-    .btn-confirm.active { background: #e63030; cursor: pointer; }
-    .btn-confirm.active:hover { background: #c82828; }
-
-    /* MODAL */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(5,10,25,0.92); z-index: 100;
-      align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: #1a2035; border-radius: 20px; padding: 2.2rem 2rem;
-      max-width: 580px; width: 100%; text-align: center; position: relative; z-index: 2;
+    /* TITLE */
+    .analyze-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1.4;
+      margin-bottom: 1.6rem;
     }
 
-    .modal-x           { font-size: 52px; color: #e63030; font-weight: 900; line-height: 1; margin-bottom: 0.6rem; }
-    .modal-title-miss  { font-size: 22px; font-weight: 700; color: #e63030; margin-bottom: 0.3rem; }
-    .modal-celebrate   { font-size: 48px; line-height: 1; margin-bottom: 0.5rem; }
-    .modal-title-win   { font-size: 22px; font-weight: 700; color: #16a34a; line-height: 1.35; margin-bottom: 0.3rem; }
-    .modal-won-amount  { font-size: 22px; font-weight: 800; color: #f5c542; margin-bottom: 1rem; }
-    .modal-sub         { font-size: 14px; color: #ccc; margin-bottom: 1rem; }
-
-    .numbers-row-wrap  { background: #111827; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; }
-    .numbers-row-label { font-size: 13px; color: #aaa; margin-bottom: 0.6rem; }
-    .numbers-row       { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
-    .res-ball          { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
-    .res-ball.white-match { background: #16a34a; color: #fff; }
-    .res-ball.white-miss  { background: #e63030; color: #fff; }
-    .res-ball.win-ball    { background: #fff; color: #111; }
-    .res-ball.pb-ball     { background: #e63030; color: #fff; }
-    .res-ball.pb-match    { background: #16a34a; color: #fff; }
-    .res-divider { width: 2px; height: 30px; background: #444; border-radius: 2px; margin: 0 4px; }
-
-    .btn-next {
-      display: block; width: 100%; margin-top: 1.2rem; padding: 16px 0;
-      background: #e63030; color: #fff; font-size: 15px; font-weight: 800;
-      letter-spacing: 1px; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase;
+    /* PROGRESS BAR */
+    .bar-wrap {
+      width: 100%;
+      height: 12px;
+      background: #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 0.6rem;
     }
-    .btn-next:hover { background: #c82828; }
-
-    /* EMOJI CONFETTI */
-    .emoji-particle {
-      position: fixed; font-size: 28px; pointer-events: none; z-index: 99;
-      animation: emoji-fall linear forwards;
-      user-select: none;
-    }
-    @keyframes emoji-fall {
-      0%   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
-      80%  { opacity: 1; }
-      100% { opacity: 0; transform: translateY(100vh) rotate(360deg) scale(0.6); }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #e63030;
+      border-radius: 6px;
+      transition: width 0.3s ease;
     }
 
-    @media (max-width: 600px) {
-      .num-btn { width: 42px; height: 42px; font-size: 13px; }
-      .pb-grid .num-btn { width: 46px; height: 46px; }
-      .res-ball { width: 40px; height: 40px; font-size: 13px; }
+    .pct-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e63030;
+      margin-bottom: 1.8rem;
     }
+
+    /* STEPS */
+    .steps { display: flex; flex-direction: column; gap: 10px; }
+
+    .step {
+      font-size: 14px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: color 0.4s;
+    }
+    .step.active { color: #333; font-weight: 600; }
+    .step.done   { color: #aaa; }
+
+    .step-icon { font-size: 16px; }
   </style>
 </head>
 <body>
-
 <div class="card">
-  <div class="tooltip-banner" id="tooltip">See the power of AI to predict the numbers!</div>
-  <div class="logo-wrap">
-    <div class="logo">
-      <div class="logo-text">
-        <span class="logo-power">POWER</span>
-        <span class="logo-lott">LOTT</span><span class="logo-ai">AI</span>
-      </div>
+
+  <div class="logo">
+    <div class="logo-text">
+      <span class="logo-power">POWER</span>
+      <span class="logo-lott">LOTT</span><span class="logo-ai">AI</span>
     </div>
   </div>
-  <p class="sim-title">With Artificial Intelligence</p>
-  <div class="progress-bar-wrap">
-    <div class="progress-bar-fill" id="progress-fill" style="width:50%"></div>
+
+  <p class="analyze-title">PowerLotto AI is analyzing your profile...</p>
+
+  <div class="bar-wrap">
+    <div class="bar-fill" id="bar-fill"></div>
   </div>
-  <div class="round-row">
-    <div class="round-info">
-      <h2 id="round-label">Round 1/2</h2>
-      <p class="ai-status">POWERLOTTO AI = <span class="ai-on">ON</span></p>
-    </div>
-    <div class="balance" id="balance-display">Balance: $0.00</div>
+  <p class="pct-label" id="pct-label">0%</p>
+
+  <div class="steps">
+    <div class="step" id="step-0"><span class="step-icon">⏳</span> Analyzing your answers...</div>
+    <div class="step" id="step-1"><span class="step-icon">⏳</span> Calculating your winning potential...</div>
+    <div class="step" id="step-2"><span class="step-icon">⏳</span> Matching patterns with high-performance data...</div>
+    <div class="step" id="step-3"><span class="step-icon">⏳</span> Preparing your PowerLotto AI test plays...</div>
   </div>
 
-  <!-- WHITE STEP -->
-  <div id="step-white">
-    <p class="instruction">Select <strong>5 white numbers</strong> (1-69):</p>
-    <p class="ai-thinking" id="ai-thinking">⚡ AI is choosing your number...</p>
-    <div class="number-grid" id="white-grid"></div>
-    <button class="btn-confirm" id="btn-confirm-white">CONFIRM WHITE NUMBERS (0/5)</button>
-  </div>
-
-  <!-- POWERBALL STEP -->
-  <div id="step-powerball" style="display:none;">
-    <p class="selected-display">Your white numbers: <span id="white-chosen-display"></span></p>
-    <p class="instruction">Now select <strong>1 Powerball number</strong> (1-26):</p>
-    <p class="ai-thinking" id="ai-thinking-pb">⚡ AI is choosing your Powerball...</p>
-    <div class="number-grid pb-grid" id="pb-grid"></div>
-    <button class="btn-confirm" id="btn-check-result">CHECK RESULT</button>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="result-modal">
-  <div class="modal" id="modal-box"></div>
 </div>
 
 <script>
-  // Prize table: {whites matched: {pb matched: prize, pb missed: prize}}
-  const PRIZES = {
-    5: { true: 1000000000, false: 1000000 },
-    4: { true: 50000,      false: 100     },
-    3: { true: 100,        false: 7       },
-    2: { true: 7,          false: 0       },
-    1: { true: 4,          false: 0       },
-    0: { true: 4,          false: 0       },
-  };
+  const DURATION = 15000; // 15 seconds
+  const bar   = document.getElementById('bar-fill');
+  const label = document.getElementById('pct-label');
+  const steps = [
+    document.getElementById('step-0'),
+    document.getElementById('step-1'),
+    document.getElementById('step-2'),
+    document.getElementById('step-3'),
+  ];
 
-  let balance = 0, round = 1;
-  let whiteSelected = [], pbSelected = null;
-  let winningWhite = [], winningPb = null;
-  let aiQueue = [], currentAiIdx = 0, waitingForClick = false;
-  let aiPbNum = null;
+  // Step activation thresholds (%)
+  const thresholds = [0, 30, 60, 85];
 
-  function shuffle(arr) {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  let start = null;
 
-  function setup(guaranteedWhiteMatches, guaranteePb) {
-    const pool = Array.from({length: 69}, (_, i) => i + 1);
-    winningWhite  = shuffle(pool).slice(0, 5).sort((a,b) => a-b);
-    winningPb     = Math.floor(Math.random() * 26) + 1;
+  function animate(ts) {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    const pct = Math.min(100, Math.round((elapsed / DURATION) * 100));
 
-    // Build AI white suggestions with guaranteed matches
-    const matches = shuffle([...winningWhite]).slice(0, guaranteedWhiteMatches);
-    const rest    = shuffle(pool.filter(n => !matches.includes(n))).slice(0, 5 - guaranteedWhiteMatches);
-    aiQueue       = shuffle([...matches, ...rest]);
+    bar.style.width = pct + '%';
+    label.textContent = pct + '%';
 
-    // AI powerball
-    aiPbNum = guaranteePb ? winningPb : Math.floor(Math.random() * 26) + 1;
-  }
-
-  // ── WHITE GRID ──
-  function buildWhiteGrid() {
-    whiteSelected = []; currentAiIdx = 0; waitingForClick = false;
-    const grid = document.getElementById('white-grid');
-    grid.innerHTML = '';
-    for (let n = 1; n <= 69; n++) {
-      const btn = document.createElement('button');
-      btn.className = 'num-btn';
-      btn.textContent = n; btn.dataset.n = n;
-      grid.appendChild(btn);
-    }
-    updateWhiteBtn();
-    document.getElementById('ai-thinking').textContent = '⚡ AI is choosing your number...';
-    setTimeout(() => revealNextWhite(), 800);
-  }
-
-  function revealNextWhite() {
-    if (currentAiIdx >= aiQueue.length) return;
-    const num = aiQueue[currentAiIdx];
-    const btn = document.querySelector(`#white-grid .num-btn[data-n="${num}"]`);
-    if (!btn) return;
-    document.getElementById('ai-thinking').textContent = `⚡ AI selected number ${num} — tap to confirm!`;
-    btn.classList.add('ai-pick');
-    btn.onclick = () => confirmWhite(num, btn);
-    waitingForClick = true;
-  }
-
-  function confirmWhite(num, btn) {
-    if (!waitingForClick) return;
-    waitingForClick = false;
-    btn.classList.remove('ai-pick');
-    btn.classList.add('selected');
-    btn.onclick = null;
-    whiteSelected.push(num);
-    currentAiIdx++;
-    updateWhiteBtn();
-    if (currentAiIdx < aiQueue.length) {
-      document.getElementById('ai-thinking').textContent = '⚡ AI is choosing next number...';
-      setTimeout(() => revealNextWhite(), 700);
-    } else {
-      document.getElementById('ai-thinking').textContent = '✅ All 5 numbers selected!';
-    }
-  }
-
-  function updateWhiteBtn() {
-    const cnt = whiteSelected.length;
-    const btn = document.getElementById('btn-confirm-white');
-    btn.textContent = `CONFIRM WHITE NUMBERS (${cnt}/5)`;
-    btn.classList.toggle('active', cnt === 5);
-  }
-
-  document.getElementById('btn-confirm-white').addEventListener('click', function() {
-    if (whiteSelected.length < 5) return;
-    const sorted = [...whiteSelected].sort((a,b) => a-b);
-    document.getElementById('white-chosen-display').textContent = sorted.join(', ');
-    document.getElementById('step-white').style.display = 'none';
-    document.getElementById('step-powerball').style.display = 'block';
-    pbSelected = null;
-    buildPbGrid();
-    document.getElementById('btn-check-result').classList.remove('active');
-  });
-
-  // ── POWERBALL GRID ──
-  function buildPbGrid() {
-    const grid = document.getElementById('pb-grid');
-    grid.innerHTML = '';
-    for (let n = 1; n <= 26; n++) {
-      const btn = document.createElement('button');
-      btn.className = 'num-btn';
-      btn.textContent = n; btn.dataset.n = n;
-      grid.appendChild(btn);
-    }
-    document.getElementById('ai-thinking-pb').textContent = '⚡ AI is choosing your Powerball...';
-    setTimeout(() => {
-      const btn = document.querySelector(`#pb-grid .num-btn[data-n="${aiPbNum}"]`);
-      if (!btn) return;
-      document.getElementById('ai-thinking-pb').textContent = `⚡ AI selected Powerball ${aiPbNum} — tap to confirm!`;
-      btn.classList.add('ai-pick');
-      btn.onclick = () => {
-        document.querySelectorAll('#pb-grid .num-btn').forEach(b => { b.classList.remove('ai-pick'); b.onclick = null; });
-        btn.classList.add('selected');
-        pbSelected = aiPbNum;
-        document.getElementById('ai-thinking-pb').textContent = `✅ Powerball ${aiPbNum} confirmed!`;
-        document.getElementById('btn-check-result').classList.add('active');
-      };
-    }, 1000);
-  }
-
-  document.getElementById('btn-check-result').addEventListener('click', function() {
-    if (!pbSelected) return;
-    const userWhite    = [...whiteSelected].sort((a,b) => a-b);
-    const whiteMatches = userWhite.filter(n => winningWhite.includes(n)).length;
-    const pbMatch      = pbSelected === winningPb;
-    const prize        = PRIZES[whiteMatches][String(pbMatch)] || 0;
-    if (prize > 0) {
-      balance += prize;
-      document.getElementById('balance-display').textContent = `Balance: $${balance.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-    }
-    showModal(userWhite, pbSelected, whiteMatches, pbMatch, prize);
-  });
-
-  // ── MODAL ──
-  function showModal(userWhite, userPb, whiteMatches, pbMatch, prize) {
-    const isWin = prize > 0;
-
-    // Build title
-    let titleStr = '';
-    if (isWin) {
-      if (pbMatch && whiteMatches > 0) {
-        titleStr = `You matched ${whiteMatches} white number${whiteMatches > 1 ? 's' : ''} + 🎯 Powerball!`;
-      } else {
-        titleStr = `You matched ${whiteMatches} white number${whiteMatches > 1 ? 's' : ''}!`;
+    // Activate steps
+    thresholds.forEach((t, i) => {
+      if (pct >= t) {
+        steps[i].classList.add('active');
       }
+    });
+
+    if (pct < 100) {
+      requestAnimationFrame(animate);
     } else {
-      titleStr = whiteMatches === 1 ? 'You matched 1 white number.' :
-                 whiteMatches === 0 ? 'You matched 0 numbers.' :
-                 `You matched ${whiteMatches} white numbers.`;
-    }
-
-    // Your numbers row
-    const yourBalls = userWhite.map(n =>
-      `<div class="res-ball ${winningWhite.includes(n) ? 'white-match' : 'white-miss'}">${n}</div>`
-    ).join('') + `<div class="res-divider"></div><div class="res-ball ${pbMatch ? 'pb-match' : 'pb-ball'}">${userPb}</div>`;
-
-    // Winning numbers row
-    const winBalls = winningWhite.map(n =>
-      `<div class="res-ball win-ball">${n}</div>`
-    ).join('') + `<div class="res-divider"></div><div class="res-ball pb-ball">${winningPb}</div>`;
-
-    const nextLabel = round === 1 ? 'NEXT ROUND →' : 'SEE MY RESULTS →';
-
-    let header = '';
-    if (isWin) {
-      const prizeStr = prize.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-      header = `
-        <div class="modal-celebrate">🎉</div>
-        <p class="modal-title-win">${titleStr}</p>
-        <p class="modal-sub">Amazing results with POWERLOTTO AI!</p>
-        <p class="modal-won-amount">You won $${prizeStr}!</p>
-      `;
-    } else {
-      header = `
-        <div class="modal-x">✕</div>
-        <p class="modal-title-miss">${titleStr}</p>
-        <p class="modal-sub">Better luck next time!</p>
-      `;
-    }
-
-    document.getElementById('modal-box').innerHTML = `
-      ${header}
-      <div class="numbers-row-wrap">
-        <p class="numbers-row-label">Your numbers:</p>
-        <div class="numbers-row">${yourBalls}</div>
-      </div>
-      <div class="numbers-row-wrap">
-        <p class="numbers-row-label">Winning numbers:</p>
-        <div class="numbers-row">${winBalls}</div>
-      </div>
-      <button class="btn-next" id="modal-next-btn">${nextLabel}</button>
-    `;
-
-    document.getElementById('result-modal').classList.add('open');
-    document.getElementById('modal-next-btn').addEventListener('click', onNext);
-    if (isWin) { launchEmojiConfetti(); playWinSound(); }
-  }
-
-  function onNext() {
-    clearEmojiConfetti();
-    emojiNodes.forEach(el => el.remove());
-    emojiNodes = [];
-    document.getElementById('result-modal').classList.remove('open');
-    if (round === 1) {
-      round = 2;
-      // Round 2: guarantee 4 whites + powerball match → $50,000
-      setup(4, true);
-      document.getElementById('round-label').textContent = 'Round 2/2';
-      document.getElementById('progress-fill').style.width = '100%';
-      document.getElementById('tooltip').style.display = 'none';
-      document.getElementById('step-powerball').style.display = 'none';
-      document.getElementById('step-white').style.display = 'block';
-      buildWhiteGrid();
-    } else {
-      sessionStorage.setItem('pl_balance', balance);
-      location.href = 'results.html';
+      // Done — redirect
+      setTimeout(() => { location.href = 'ai-simulator.html'; }, 300);
     }
   }
 
-  // ── WIN SOUND ──
-  function playWinSound() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-      function playNote(freq, startTime, duration, vol = 0.4) {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-        gain.gain.setValueAtTime(vol, ctx.currentTime + startTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
-        osc.start(ctx.currentTime + startTime);
-        osc.stop(ctx.currentTime + startTime + duration);
-      }
-
-      // Coin/win melody: ascending happy notes
-      playNote(523, 0.00, 0.15); // C5
-      playNote(659, 0.12, 0.15); // E5
-      playNote(784, 0.24, 0.15); // G5
-      playNote(1047,0.36, 0.25); // C6
-      playNote(784, 0.48, 0.12); // G5
-      playNote(1047,0.56, 0.40); // C6 long
-
-    } catch(e) { /* silently fail if audio blocked */ }
-  }
-
-  // ── EMOJI CONFETTI ──
-  const EMOJIS = ['💰','💎','🌕','🎉','🏆','⭐','💫','🤑','🎊','🎯'];
-  let emojiNodes = [];
-  let emojiRunning = false;
-
-  function launchEmojiConfetti() {
-    clearEmojiConfetti();
-    emojiRunning = true;
-    let count = 0;
-    const max = 40;
-    function spawn() {
-      if (!emojiRunning || count >= max) return;
-      const el = document.createElement('div');
-      el.className = 'emoji-particle';
-      el.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-      const startX = Math.random() * 100;
-      const duration = 2.5 + Math.random() * 2;
-      const delay = Math.random() * 2;
-      el.style.left = startX + 'vw';
-      el.style.top  = '-40px';
-      el.style.fontSize = (22 + Math.random() * 16) + 'px';
-      el.style.animationDuration = duration + 's';
-      el.style.animationDelay    = delay + 's';
-      document.body.appendChild(el);
-      emojiNodes.push(el);
-      setTimeout(() => el.remove(), (duration + delay + 0.5) * 1000);
-      count++;
-      setTimeout(spawn, 120);
-    }
-    spawn();
-  }
-
-  function clearEmojiConfetti() {
-    emojiRunning = false;
-    emojiNodes.forEach(el => { try { el.remove(); } catch(e){} });
-    emojiNodes = [];
-  }
-
-  // ── INIT ──
-  // Round 1: guarantee 4 whites, no guaranteed powerball
-  setup(4, false);
-  buildWhiteGrid();
+  requestAnimationFrame(animate);
 </script>
 </body>
 </html>
